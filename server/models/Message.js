@@ -1,17 +1,24 @@
 const db = require('../database');
 
 class Message {
+  /**
+   * Crée un nouveau message (public ou privé)
+   * @param {Object} messageData - { content, user_id, room_id, is_private, recipient_id, mentioned_users }
+   * @param {Function} callback 
+   */
   static create(messageData, callback) {
-    const { content, user_id, room_id, is_private, recipient_id, mentioned_users } = messageData;
-    
+    const { content, user_id, room_id, is_private = 0, recipient_id = null, mentioned_users = null } = messageData;
+
     db.run(
       `INSERT INTO messages (content, user_id, room_id, is_private, recipient_id, mentioned_users) 
        VALUES (?, ?, ?, ?, ?, ?)`,
       [content, user_id, room_id, is_private, recipient_id, mentioned_users],
       function(err) {
         if (err) return callback(err);
-        
-        // Récupérer le message complet avec les informations utilisateur
+
+        if (!this.lastID) return callback(new Error("Impossible de récupérer l'ID du message"));
+
+        // Récupérer le message complet avec infos utilisateur
         db.get(
           `SELECT m.*, u.pseudo, u.gender, u.verified, u.verification_badge, u.role 
            FROM messages m 
@@ -24,6 +31,12 @@ class Message {
     );
   }
 
+  /**
+   * Récupère les messages publics d'une salle
+   * @param {number} roomId 
+   * @param {number} limit 
+   * @param {Function} callback 
+   */
   static findByRoom(roomId, limit = 100, callback) {
     db.all(
       `SELECT m.*, u.pseudo, u.gender, u.verified, u.verification_badge, u.role 
@@ -37,6 +50,12 @@ class Message {
     );
   }
 
+  /**
+   * Récupère les messages privés entre deux utilisateurs
+   * @param {number} userId 
+   * @param {number} recipientId 
+   * @param {Function} callback 
+   */
   static findPrivateMessages(userId, recipientId, callback) {
     db.all(
       `SELECT m.*, u.pseudo, u.gender, u.verified, u.verification_badge, u.role 
@@ -50,13 +69,30 @@ class Message {
     );
   }
 
+  /**
+   * Supprime un message
+   * @param {number} messageId 
+   * @param {Function} callback 
+   */
   static delete(messageId, callback) {
-    db.run("DELETE FROM messages WHERE id = ?", [messageId], callback);
+    db.run(
+      "DELETE FROM messages WHERE id = ?",
+      [messageId],
+      function(err) {
+        if (err) return callback(err);
+        callback(null, this.changes);
+      }
+    );
   }
 
+  /**
+   * Récupère les messages où un utilisateur est mentionné
+   * @param {number} userId 
+   * @param {Function} callback 
+   */
   static findMentions(userId, callback) {
     db.all(
-      `SELECT m.*, u.pseudo as author_pseudo, r.name as room_name 
+      `SELECT m.*, u.pseudo AS author_pseudo, r.name AS room_name 
        FROM messages m 
        JOIN users u ON m.user_id = u.id 
        JOIN rooms r ON m.room_id = r.id 
