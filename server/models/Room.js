@@ -14,8 +14,8 @@ class Room {
   }
 
   static create(roomData, callback) {
-    const { name, topic, is_private, is_age_restricted, min_age, max_age, password, created_by } = roomData;
-    
+    const { name, topic, is_private = 0, is_age_restricted = 0, min_age = null, max_age = null, password = null, created_by } = roomData;
+
     db.run(
       `INSERT INTO rooms (name, topic, is_private, is_age_restricted, min_age, max_age, password, created_by) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -30,70 +30,74 @@ class Room {
   static update(roomId, updates, callback) {
     const fields = [];
     const values = [];
-    
+
     for (const [key, value] of Object.entries(updates)) {
       fields.push(`${key} = ?`);
       values.push(value);
     }
-    
+
     values.push(roomId);
-    
+
     db.run(
       `UPDATE rooms SET ${fields.join(', ')} WHERE id = ?`,
       values,
       function(err) {
-        callback(err, this.changes);
+        if (err) return callback(err);
+        callback(null, this.changes);
       }
     );
   }
 
   static delete(roomId, callback) {
-    db.run("DELETE FROM rooms WHERE id = ?", [roomId], callback);
+    db.run("DELETE FROM rooms WHERE id = ?", [roomId], function(err) {
+      if (err) return callback(err);
+      callback(null, this.changes);
+    });
   }
 
+  /**
+   * Vérifie si un utilisateur peut rejoindre un salon
+   */
   static canUserJoin(userId, roomId, callback) {
-    // Vérifier si l'utilisateur peut rejoindre le salon
     db.get(
       `SELECT r.*, u.birthdate, u.role 
-       FROM rooms r, users u 
-       WHERE r.id = ? AND u.id = ?`,
-      [roomId, userId],
+       FROM rooms r 
+       JOIN users u ON u.id = ? 
+       WHERE r.id = ?`,
+      [userId, roomId],
       (err, row) => {
         if (err) return callback(err);
-        
         if (!row) return callback(null, false);
-        
-        // Si le salon est privé, vérifier les permissions
+
+        // Salon privé → vérifier si l'utilisateur est modérateur
         if (row.is_private === 1) {
           db.get(
             "SELECT * FROM room_moderators WHERE room_id = ? AND user_id = ?",
             [roomId, userId],
             (err, moderator) => {
-              callback(null, !!moderator);
+              if (err) return callback(err);
+              return callback(null, !!moderator);
             }
           );
         } 
-        // Si le salon a des restrictions d'âge
+        // Salon avec restriction d'âge
         else if (row.is_age_restricted === 1) {
           const birthdate = new Date(row.birthdate);
           const today = new Date();
           let age = today.getFullYear() - birthdate.getFullYear();
           const monthDiff = today.getMonth() - birthdate.getMonth();
-          
-          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthdate.getDate())) {
-            age--;
-          }
-          
-          // Les modérateurs peuvent toujours rejoindre
+          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthdate.getDate())) age--;
+
+          // Les modérateurs ou rôles spéciaux peuvent toujours rejoindre
           if (row.role !== 'user') {
-            callback(null, true);
-          } else {
-            callback(null, age >= row.min_age && age <= row.max_age);
+            return callback(null, true);
           }
+
+          return callback(null, age >= row.min_age && age <= row.max_age);
         } 
-        // Sinon, tout le monde peut rejoindre
+        // Salon ouvert
         else {
-          callback(null, true);
+          return callback(null, true);
         }
       }
     );
