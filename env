@@ -1,29 +1,61 @@
-cat > .env.example <<EOF
-# Port du serveur
-PORT=5000
+require('dotenv').config();
+const mongoose = require('mongoose');
+const User = require('./models/User');
+const Room = require('./models/Room');
 
-# URL côté client
-CLIENT_URL=http://localhost:5000
+const MONGO_URI = process.env.MONGO_URI;
+const OWNER_EMAIL = process.env.OWNER_EMAIL;
+const OWNER_PASSWORD = process.env.OWNER_PASSWORD;
+const ROOMS_DEFAULT = process.env.ROOMS_DEFAULT ? process.env.ROOMS_DEFAULT.split(',') : [];
 
-# URI MongoDB (remplacer <username>, <password>, <cluster> et <database>)
-MONGO_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<database>?retryWrites=true&w=majority
+async function init() {
+  try {
+    await mongoose.connect(MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log('Connecté à MongoDB ✅');
 
-# Compte propriétaire du chat
-OWNER_EMAIL=owner@example.com
-OWNER_PASSWORD=changeme123
+    // Vérifier si l’owner existe déjà
+    let owner = await User.findOne({ email: OWNER_EMAIL });
+    if (!owner) {
+      owner = new User({
+        email: OWNER_EMAIL,
+        pseudo: 'Owner',
+        password: OWNER_PASSWORD,
+        role: 'owner',
+        verified: true,
+      });
+      await owner.save();
+      console.log('Utilisateur owner créé ✅');
+    } else {
+      console.log('Utilisateur owner déjà existant ⚠️');
+    }
 
-# Bots
-BOT_NAY_NAME=Nay
-BOT_NAY_PREFIX=!
+    // Créer les salons par défaut
+    for (const roomName of ROOMS_DEFAULT) {
+      const existingRoom = await Room.findOne({ name: roomName.trim() });
+      if (!existingRoom) {
+        const room = new Room({
+          name: roomName.trim(),
+          topic: 'Salon par défaut',
+          is_private: false,
+          is_age_restricted: false,
+          created_by: owner._id,
+        });
+        await room.save();
+        console.log(`Salon créé: ${roomName} ✅`);
+      } else {
+        console.log(`Salon déjà existant: ${roomName} ⚠️`);
+      }
+    }
 
-BOT_DRISE_NAME=Drise
-BOT_VIEW_NAME=View
+    console.log('Initialisation terminée 🎉');
+    process.exit(0);
+  } catch (error) {
+    console.error('Erreur lors de l’initialisation:', error);
+    process.exit(1);
+  }
+}
 
-# Salons par défaut
-ROOMS_DEFAULT=Accueil,Jeux,Musique,Créations,Annonce,Suggestions,NSFW,VIP,Modération,Aide
-
-# Autres configurations
-MAX_MESSAGE_LENGTH=1000
-USERNAME_UNIQUE=true
-NOTIFICATION_SOUND=true
-EOF
+init();
