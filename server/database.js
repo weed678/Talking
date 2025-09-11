@@ -3,7 +3,13 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 
 const dbPath = path.join(__dirname, '..', 'database.db');
-const db = new sqlite3.Database(dbPath);
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error("Erreur lors de l'ouverture de la base de données :", err.message);
+  } else {
+    console.log("Base de données SQLite connectée.");
+  }
+});
 
 // Initialisation de la base de données
 db.serialize(() => {
@@ -24,7 +30,9 @@ db.serialize(() => {
     online INTEGER DEFAULT 0,
     last_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
+  )`, (err) => {
+    if (err) console.error("Erreur création table users :", err.message);
+  });
 
   // Table des salles
   db.run(`CREATE TABLE IF NOT EXISTS rooms (
@@ -39,7 +47,9 @@ db.serialize(() => {
     created_by INTEGER,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (created_by) REFERENCES users (id)
-  )`);
+  )`, (err) => {
+    if (err) console.error("Erreur création table rooms :", err.message);
+  });
 
   // Table des messages
   db.run(`CREATE TABLE IF NOT EXISTS messages (
@@ -54,7 +64,9 @@ db.serialize(() => {
     FOREIGN KEY (user_id) REFERENCES users (id),
     FOREIGN KEY (room_id) REFERENCES rooms (id),
     FOREIGN KEY (recipient_id) REFERENCES users (id)
-  )`);
+  )`, (err) => {
+    if (err) console.error("Erreur création table messages :", err.message);
+  });
 
   // Table des commentaires de profil
   db.run(`CREATE TABLE IF NOT EXISTS profile_comments (
@@ -66,7 +78,9 @@ db.serialize(() => {
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users (id),
     FOREIGN KEY (author_id) REFERENCES users (id)
-  )`);
+  )`, (err) => {
+    if (err) console.error("Erreur création table profile_comments :", err.message);
+  });
 
   // Table des modérateurs de salons
   db.run(`CREATE TABLE IF NOT EXISTS room_moderators (
@@ -79,10 +93,13 @@ db.serialize(() => {
     FOREIGN KEY (room_id) REFERENCES rooms (id),
     FOREIGN KEY (user_id) REFERENCES users (id),
     FOREIGN KEY (granted_by) REFERENCES users (id)
-  )`);
+  )`, (err) => {
+    if (err) console.error("Erreur création table room_moderators :", err.message);
+  });
 
-  // Insertion des salles par défaut
-  db.get("SELECT COUNT(*) as count FROM rooms", (err, row) => {
+  // Insertion des salles par défaut si aucune n'existe
+  db.get("SELECT COUNT(*) AS count FROM rooms", (err, row) => {
+    if (err) return console.error("Erreur lecture rooms :", err.message);
     if (row.count === 0) {
       const defaultRooms = [
         { name: 'general', topic: 'Discussion générale', is_private: 0, is_age_restricted: 0 },
@@ -93,14 +110,25 @@ db.serialize(() => {
 
       const stmt = db.prepare("INSERT INTO rooms (name, topic, is_private, is_age_restricted, min_age, max_age) VALUES (?, ?, ?, ?, ?, ?)");
       defaultRooms.forEach(room => {
-        stmt.run(room.name, room.topic, room.is_private, room.is_age_restricted, room.min_age, room.max_age);
+        stmt.run(
+          room.name, 
+          room.topic, 
+          room.is_private, 
+          room.is_age_restricted, 
+          room.min_age || null, 
+          room.max_age || null,
+          (err) => {
+            if (err) console.error(`Erreur insertion salle ${room.name} :`, err.message);
+          }
+        );
       });
       stmt.finalize();
     }
   });
 
-  // Création du propriétaire par défaut
-  db.get("SELECT COUNT(*) as count FROM users WHERE email = 'jenniferlouis550@gmail.com'", (err, row) => {
+  // Création du propriétaire par défaut si inexistant
+  db.get("SELECT COUNT(*) AS count FROM users WHERE email = ?", ['jenniferlouis550@gmail.com'], (err, row) => {
+    if (err) return console.error("Erreur lecture users :", err.message);
     if (row.count === 0) {
       const hashedPassword = bcrypt.hashSync('12345678900', 10);
       db.run(
@@ -116,7 +144,10 @@ db.serialize(() => {
           1,
           'owner',
           'owner'
-        ]
+        ],
+        (err) => {
+          if (err) console.error("Erreur création utilisateur owner :", err.message);
+        }
       );
     }
   });
