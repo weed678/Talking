@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TALKING - Application de Chat</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Écran de connexion -->
+        <div id="auth-screen" class="screen active">
+            <div class="auth-container">
+                <div class="auth-form" id="login-form">
+                    <h2>Connexion</h2>
+                    <div class="form-group">
+                        <label for="login-pseudo">Pseudo</label>
+                        <input type="text" id="login-pseudo" class="form-control" placeholder="Votre pseudo">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Mot de passe</label>
+                        <input type="password" id="login-password" class="form-control" placeholder="Votre mot de passe">
+                    </div>
+                    <button class="btn btn-block" onclick="login()">Se connecter</button>
+                    <div class="auth-switch">
+                        <p>Pas encore de compte? <a onclick="showRegisterForm()">S'inscrire</a></p>
+                    </div>
+                </div>
+
+                <div class="auth-form" id="register-form" style="display: none;">
+                    <h2>Inscription</h2>
+                    <div class="form-group">
+                        <label for="register-email">Email</label>
+                        <input type="email" id="register-email" class="form-control" placeholder="Votre email">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-birthdate">Date de naissance</label>
+                        <input type="date" id="register-birthdate" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-pseudo">Pseudo</label>
+                        <input type="text" id="register-pseudo" class="form-control" placeholder="Choisissez un pseudo">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-city">Ville</label>
+                        <input type="text" id="register-city" class="form-control" placeholder="Votre ville">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-gender">Sexe</label>
+                        <select id="register-gender" class="form-control">
+                            <option value="male">Homme</option>
+                            <option value="female">Femme</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Mot de passe</label>
+                        <input type="password" id="register-password" class="form-control" placeholder="Créez un mot de passe">
+                    </div>
+                    <button class="btn btn-block" onclick="register()">S'inscrire</button>
+                    <div class="auth-switch">
+                        <p>Déjà un compte? <a onclick="showLoginForm()">Se connecter</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interface principale de chat -->
+        <div id="chat-screen" class="screen">
+            <div class="chat-header">
+                <h2>TALKING Chat</h2>
+                <div class="user-controls">
+                    <span id="current-user"></span>
+                    <button class="btn" onclick="showProfile()">Profil</button>
+                    <button class="btn" onclick="logout()">Déconnexion</button>
+                </div>
+            </div>
+            <div class="chat-main">
+                <div class="sidebar">
+                    <div class="room-list">
+                        <h3>Salons</h3>
+                        <div id="rooms-container"></div>
+                    </div>
+                    <div class="user-list">
+                        <h3>Utilisateurs en ligne</h3>
+                        <div id="online-users"></div>
+                    </div>
+                </div>
+                <div class="chat-area">
+                    <div class="messages-container" id="messages-container"></div>
+                    <div class="input-area">
+                        <textarea class="message-input" id="message-input" placeholder="Tapez votre message ici..."></textarea>
+                        <button class="btn send-btn" onclick="sendMessage()">Envoyer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interface de profil -->
+        <div id="profile-screen" class="screen">
+            <div class="profile-container">
+                <div class="profile-header">
+                    <div class="profile-avatar" id="profile-avatar"></div>
+                    <div class="profile-info">
+                        <h2 id="profile-pseudo"></h2>
+                        <p id="profile-location"></p>
+                        <p id="profile-status"></p>
+                    </div>
+                </div>
+                <div class="profile-bio" id="profile-bio"></div>
+                <div class="comments-section">
+                    <h3>Commentaires</h3>
+                    <div id="profile-comments"></div>
+                    <div class="form-group">
+                        <textarea class="form-control" id="comment-input" placeholder="Ajouter un commentaire..."></textarea>
+                    </div>
+                    <button class="btn" onclick="addComment()">Ajouter un commentaire</button>
+                </div>
+                <button class="btn back-btn" onclick="showChat()">Retour au chat</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/profile.js"></script>
+</body>
+</html>
