@@ -1,0 +1,417 @@
+:root {
+    --primary-color: #4a6fa5;
+    --secondary-color: #166088;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --male-color: #28a745;
+    --female-color: #e83e8c;
+    --background-color: #f4f4f4;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--dark-color);
+    line-height: 1.6;
+    height: 100vh;
+}
+
+.screen {
+    display: none;
+    height: 100vh;
+}
+
+.screen.active {
+    display: block;
+}
+
+/* Authentication Styles */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+}
+
+.auth-form {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 500px;
+}
+
+.auth-form h2 {
+    margin-bottom: 20px;
+    text-align: center;
+    color: var(--primary-color);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.btn:hover {
+    background-color: var(--secondary-color);
+}
+
+.btn-block {
+    display: block;
+    width: 100%;
+}
+
+.auth-switch {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.auth-switch a {
+    color: var(--primary-color);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Chat Interface Styles */
+.chat-screen {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.chat-header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.user-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.chat-main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.sidebar {
+    width: 250px;
+    background-color: #f8f9fa;
+    border-right: 1px solid #ddd;
+    padding: 15px;
+    overflow-y: auto;
+}
+
+.room-list, .user-list {
+    margin-bottom: 20px;
+}
+
+.room-list h3, .user-list h3 {
+    margin-bottom: 10px;
+    font-size: 16px;
+    color: var(--dark-color);
+}
+
+.room-item, .user-item {
+    padding: 8px 10px;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.room-item:hover, .user-item:hover {
+    background-color: #e9ecef;
+}
+
+.room-item.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.user-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin-right: 10px;
+    background-color: #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.messages-container {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+}
+
+.message {
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 8px;
+    background-color: #f1f1f1;
+}
+
+.message-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.message-sender {
+    font-weight: bold;
+}
+
+.male {
+    color: var(--male-color);
+}
+
+.female {
+    color: var(--female-color);
+}
+
+.message-time {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.message-content {
+    word-wrap: break-word;
+}
+
+.input-area {
+    padding: 15px;
+    border-top: 1px solid #ddd;
+    display: flex;
+}
+
+.message-input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: none;
+    height: 60px;
+}
+
+.send-btn {
+    margin-left: 10px;
+    align-self: flex-end;
+    height: 40px;
+}
+
+/* Profile Screen Styles */
+.profile-screen {
+    padding: 20px;
+    background-color: var(--background-color);
+}
+
+.profile-container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin-right: 20px;
+    background-color: #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    color: #666;
+}
+
+.profile-info h2 {
+    margin-bottom: 5px;
+}
+
+.profile-bio {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.comments-section {
+    margin-top: 30px;
+}
+
+.comment {
+    padding: 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.comment-author {
+    font-weight: bold;
+}
+
+.comment-time {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.back-btn {
+    margin-top: 20px;
+}
+
+/* Badges */
+.badge {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    margin-left: 5px;
+}
+
+.badge-owner {
+    background-color: var(--success-color);
+}
+
+.badge-opp {
+    background-color: var(--danger-color);
+}
+
+.badge-half-opp {
+    background-color: var(--warning-color);
+}
+
+.badge-voice {
+    background-color: var(--info-color);
+}
+
+.badge-bot {
+    background-color: var(--female-color);
+}
+
+/* Role prefixes */
+.prefix-owner::before {
+    content: "~";
+    color: var(--success-color);
+    margin-right: 2px;
+}
+
+.prefix-admin::before {
+    content: "&";
+    color: var(--danger-color);
+    margin-right: 2px;
+}
+
+.prefix-opp::before {
+    content: "%";
+    color: var(--warning-color);
+    margin-right: 2px;
+}
+
+.prefix-half-opp::before {
+    content: "@";
+    color: var(--info-color);
+    margin-right: 2px;
+}
+
+.prefix-voice::before {
+    content: "+";
+    color: var(--info-color);
+    margin-right: 2px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .chat-main {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #ddd;
+        height: 200px;
+    }
+
+    .user-avatar {
+        width: 25px;
+        height: 25px;
+        font-size: 12px;
+    }
+    
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .profile-avatar {
+        margin-right: 0;
+        margin-bottom: 15px;
+    }
+}
