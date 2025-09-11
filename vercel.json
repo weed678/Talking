@@ -1,0 +1,31 @@
+{
+  "version": 2,
+  "name": "talking-chat",
+  "builds": [
+    {
+      "src": "server/server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "server/server.js"
+    }
+  ],
+  "env": {
+    "PORT": "5000",
+    "CLIENT_URL": "http://localhost:5000",
+    "MONGO_URI": "mongodb+srv://jenniferlouis550_db_user:9agLMTEX05FmAS7P@cluster0.mongodb.net/<database>?retryWrites=true&w=majority",
+    "OWNER_EMAIL": "owner@example.com",
+    "OWNER_PASSWORD": "changeme123",
+    "BOT_NAY_NAME": "Nay",
+    "BOT_NAY_PREFIX": "!",
+    "BOT_DRISE_NAME": "Drise",
+    "BOT_VIEW_NAME": "View",
+    "ROOMS_DEFAULT": "Accueil,Jeux,Musique,Créations,Annonce,Suggestions,NSFW,VIP,Modération,Aide",
+    "MAX_MESSAGE_LENGTH": "1000",
+    "USERNAME_UNIQUE": "true",
+    "NOTIFICATION_SOUND": "true"
+  }
+}
