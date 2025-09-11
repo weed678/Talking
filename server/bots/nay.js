@@ -5,7 +5,7 @@ class NayBot {
   }
 
   // Répondre à la commande !help
-  handleHelpCommand(user, room) {
+  handleHelpCommand(user) {
     const helpMessage = `
 Salut! 😃 Voici toutes les commandes que tu peux utiliser ici :
 
@@ -30,18 +30,16 @@ Salut! 😃 Voici toutes les commandes que tu peux utiliser ici :
     });
   }
 
-  // Répondre à la commande !seen
-  handleSeenCommand(user, targetPseudo, room) {
-    // Cette fonction nécessiterait d'accéder à la base de données
-    // Pour l'instant, on simule une réponse
+  // Répondre à la commande !seen (à améliorer pour vraie base)
+  handleSeenCommand(user, targetPseudo) {
     const responses = [
       `${targetPseudo} était en ligne il y a 5 minutes`,
       `${targetPseudo} est actuellement en ligne`,
       `Utilisateur ${targetPseudo} introuvable`
     ];
-    
+
     const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-    
+
     this.io.to(user.id).emit('bot_message', {
       bot: this.name,
       message: randomResponse,
@@ -49,14 +47,14 @@ Salut! 😃 Voici toutes les commandes que tu peux utiliser ici :
     });
   }
 
-  // Gérer les commandes fun
+  // Gérer les commandes fun (!kiss, !hug, !slap)
   handleFunCommand(command, user, targetPseudo, room) {
     const actions = {
       '!kiss': 'envoie un bisou à',
       '!hug': 'fait un câlin à',
       '!slap': 'gifle'
     };
-    
+
     if (actions[command] && targetPseudo) {
       this.io.to(room).emit('bot_message', {
         bot: this.name,
@@ -69,27 +67,25 @@ Salut! 😃 Voici toutes les commandes que tu peux utiliser ici :
   // Traiter les messages pour détecter les commandes
   processMessage(message, user, room) {
     if (!message.startsWith('!')) return false;
-    
-    const parts = message.split(' ');
-    const command = parts[0].toLowerCase();
-    const target = parts[1];
-    
-    switch(command) {
+
+    const [command, target] = message.split(' ');
+
+    switch(command.toLowerCase()) {
       case '!help':
-        this.handleHelpCommand(user, room);
+        this.handleHelpCommand(user);
         break;
       case '!seen':
-        this.handleSeenCommand(user, target, room);
+        this.handleSeenCommand(user, target);
         break;
       case '!kiss':
       case '!hug':
       case '!slap':
-        this.handleFunCommand(command, user, target, room);
+        this.handleFunCommand(command.toLowerCase(), user, target, room);
         break;
       default:
         return false;
     }
-    
+
     return true;
   }
 }
