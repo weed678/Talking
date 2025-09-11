@@ -8,30 +8,32 @@ class DriseBot {
 
   // Attribuer automatiquement des droits aux utilisateurs
   assignRights(userId, roomId) {
-    // Cette fonction serait appelée quand un utilisateur rejoint un salon
-    // Ici on simule l'attribution de droits basée sur des règles prédéfinies
-    
-    // En réalité, vous auriez une logique pour déterminer quels droits attribuer
+    // Cette fonction peut être appelée quand un utilisateur rejoint un salon
     console.log(`Drise attribue des droits à l'utilisateur ${userId} dans le salon ${roomId}`);
+    // Exemple : donner le rôle "voice" aux nouveaux membres d'un salon public
+    User.findById(userId, (err, user) => {
+      if (err || !user) return;
+      if (user.role === 'user') {
+        this.grantRole(1, userId, 'voice', roomId); // 1 = ID du propriétaire par défaut
+      }
+    });
   }
 
-  // Annoncer l'arrivée d'un utilisateur avec ses droits
+  // Annoncer l'arrivée d'un utilisateur avec son rôle
   announceUserJoin(user, room) {
-    let announcement = `${user.pseudo} a rejoint le salon`;
-    
-    // Ajouter le préfixe selon le rôle
-    if (user.role === 'owner') {
-      announcement = `~${announcement}`;
-    } else if (user.role === 'admin') {
-      announcement = `&${announcement}`;
-    } else if (user.role === 'opp') {
-      announcement = `%${announcement}`;
-    } else if (user.role === 'half-opp') {
-      announcement = `@${announcement}`;
-    } else if (user.role === 'voice') {
-      announcement = `+${announcement}`;
-    }
-    
+    if (!user || !room) return;
+
+    const rolePrefixes = {
+      'owner': '~',
+      'admin': '&',
+      'opp': '%',
+      'half-opp': '@',
+      'voice': '+'
+    };
+
+    const prefix = rolePrefixes[user.role] || '';
+    const announcement = `${prefix}${user.pseudo} a rejoint le salon`;
+
     this.io.to(room).emit('bot_message', {
       bot: this.name,
       message: announcement,
@@ -41,6 +43,8 @@ class DriseBot {
 
   // Annoncer le départ d'un utilisateur
   announceUserLeave(user, room) {
+    if (!user || !room) return;
+
     this.io.to(room).emit('bot_message', {
       bot: this.name,
       message: `${user.pseudo} a quitté le salon`,
@@ -50,25 +54,24 @@ class DriseBot {
 
   // Donner un rôle à un utilisateur
   grantRole(granterId, targetId, role, roomId) {
-    // Vérifier que celui qui donne le rôle a les permissions
     User.findById(granterId, (err, granter) => {
       if (err || !granter) return;
-      
+
       // Seul le propriétaire peut attribuer des rôles
       if (granter.role !== 'owner') return;
-      
+
       User.updateRole(targetId, role, role, (err) => {
-        if (!err) {
-          User.findById(targetId, (err, targetUser) => {
-            if (!err && targetUser) {
-              this.io.to(roomId).emit('bot_message', {
-                bot: this.name,
-                message: `${targetUser.pseudo} est maintenant ${role}`,
-                type: 'success'
-              });
-            }
+        if (err) return;
+
+        User.findById(targetId, (err, targetUser) => {
+          if (err || !targetUser) return;
+
+          this.io.to(roomId).emit('bot_message', {
+            bot: this.name,
+            message: `${targetUser.pseudo} est maintenant ${role}`,
+            type: 'success'
           });
-        }
+        });
       });
     });
   }
