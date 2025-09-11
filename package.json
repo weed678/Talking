@@ -1,25 +1,30 @@
 {
   "name": "talking-chat",
   "version": "1.0.0",
-  "description": "Application de chat en temps réel avec modération",
+  "description": "Application de chat TALKING",
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js",
     "dev": "nodemon server/server.js"
   },
+  "keywords": ["chat", "socket.io", "express"],
+  "author": "VotreNom",
+  "license": "MIT",
   "dependencies": {
+    "bcrypt": "^5.1.0",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.3.1",
     "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "multer": "^2.3.0",
     "socket.io": "^4.7.2",
-    "sqlite3": "^5.1.6",
-    "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2",
-    "multer": "^1.4.5-lts.1",
-    "request-ip": "^3.3.0"
+    "sqlite3": "^5.1.6"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.2"
   },
-  "keywords": ["chat", "realtime", "socket.io"],
-  "author": "fanfanjei",
-  "license": "MIT"
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }
