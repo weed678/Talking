@@ -1,91 +1,56 @@
 const db = require('../database');
 
 class Comment {
-  /**
-   * Crée un nouveau commentaire de profil
-   * @param {Object} commentData - { user_id, author_id, content }
-   * @param {Function} callback - callback(err, result)
-   */
-  static create(commentData, callback) {
-    const { user_id, author_id, content } = commentData;
-
-    db.run(
-      "INSERT INTO profile_comments (user_id, author_id, content) VALUES (?, ?, ?)",
-      [user_id, author_id, content],
-      function(err) {
-        if (err) return callback(err);
-
-        if (!this.lastID) return callback(new Error("Impossible de récupérer l'ID du commentaire"));
-
-        // Récupérer le commentaire complet avec infos de l'auteur
-        db.get(
-          `SELECT c.*, 
-                  u.pseudo AS author_pseudo, 
-                  u.verified AS author_verified, 
-                  u.verification_badge AS author_badge, 
-                  u.role AS author_role 
-           FROM profile_comments c 
-           JOIN users u ON c.author_id = u.id 
-           WHERE c.id = ?`,
-          [this.lastID],
-          callback
+    // Créer un nouveau commentaire
+    static create(data, callback) {
+        const { user_id, author_id, content } = data;
+        db.run(
+            `INSERT INTO profile_comments (user_id, author_id, content) VALUES (?, ?, ?)`,
+            [user_id, author_id, content],
+            function(err) {
+                if (err) return callback(err);
+                Comment.findById(this.lastID, callback);
+            }
         );
-      }
-    );
-  }
+    }
 
-  /**
-   * Récupère tous les commentaires pour un utilisateur
-   * @param {number} userId 
-   * @param {Function} callback 
-   */
-  static findByUser(userId, callback) {
-    db.all(
-      `SELECT c.*, 
-              u.pseudo AS author_pseudo, 
-              u.verified AS author_verified, 
-              u.verification_badge AS author_badge, 
-              u.role AS author_role 
-       FROM profile_comments c 
-       JOIN users u ON c.author_id = u.id 
-       WHERE c.user_id = ? 
-       ORDER BY c.created_at DESC`,
-      [userId],
-      callback
-    );
-  }
+    // Trouver un commentaire par son ID
+    static findById(id, callback) {
+        db.get(`
+            SELECT c.*, u.pseudo as author_pseudo
+            FROM profile_comments c
+            JOIN users u ON c.author_id = u.id
+            WHERE c.id = ?`,
+            [id], callback);
+    }
 
-  /**
-   * Ajoute un like à un commentaire
-   * @param {number} commentId 
-   * @param {Function} callback 
-   */
-  static like(commentId, callback) {
-    db.run(
-      "UPDATE profile_comments SET likes = likes + 1 WHERE id = ?",
-      [commentId],
-      function(err) {
-        if (err) return callback(err);
-        callback(null, this.changes); // this.changes = nombre de lignes affectées
-      }
-    );
-  }
+    // Trouver tous les commentaires pour un utilisateur donné
+    static findByUser(userId, callback) {
+        db.all(`
+            SELECT c.*, u.pseudo as author_pseudo
+            FROM profile_comments c
+            JOIN users u ON c.author_id = u.id
+            WHERE c.user_id = ?
+            ORDER BY c.created_at DESC`,
+            [userId], callback
+        );
+    }
 
-  /**
-   * Supprime un commentaire
-   * @param {number} commentId 
-   * @param {Function} callback 
-   */
-  static delete(commentId, callback) {
-    db.run(
-      "DELETE FROM profile_comments WHERE id = ?",
-      [commentId],
-      function(err) {
-        if (err) return callback(err);
-        callback(null, this.changes);
-      }
-    );
-  }
+    // Aimer un commentaire
+    static like(id, callback) {
+        db.run(`UPDATE profile_comments SET likes = likes + 1 WHERE id = ?`, [id], function(err) {
+            if (err) return callback(err);
+            callback(null, this.changes);
+        });
+    }
+
+    // Supprimer un commentaire
+    static delete(id, callback) {
+        db.run(`DELETE FROM profile_comments WHERE id = ?`, [id], function(err) {
+            if (err) return callback(err);
+            callback(null, this.changes);
+        });
+    }
 }
 
 module.exports = Comment;

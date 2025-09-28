@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const AutoRole = require('../models/AutoRole');
 
 class DriseBot {
   constructor(io) {
@@ -6,22 +7,55 @@ class DriseBot {
     this.name = "Drise";
   }
 
-  // Attribuer automatiquement des droits aux utilisateurs
-  assignRights(userId, roomId) {
-    // Cette fonction peut être appelée quand un utilisateur rejoint un salon
-    console.log(`Drise attribue des droits à l'utilisateur ${userId} dans le salon ${roomId}`);
-    // Exemple : donner le rôle "voice" aux nouveaux membres d'un salon public
-    User.findById(userId, (err, user) => {
-      if (err || !user) return;
-      if (user.role === 'user') {
-        this.grantRole(1, userId, 'voice', roomId); // 1 = ID du propriétaire par défaut
+  /**
+   * Gère l'arrivée d'un utilisateur dans un salon.
+   * Vérifie les rôles automatiques et annonce l'arrivée.
+   * @param {object} user - L'objet utilisateur.
+   * @param {string} roomName - Le nom du salon pour le socket (ex: "room_1").
+   * @param {number} roomId - L'ID du salon dans la base de données.
+   */
+  handleUserJoin(user, roomName, roomId) {
+    AutoRole.find(user.id, roomId, (err, autoRole) => {
+      if (err) {
+        console.error("DriseBot Error:", err);
+        // En cas d'erreur, on annonce quand même l'arrivée de l'utilisateur
+        this.announceUserJoin(user, roomName);
+        return;
+      }
+
+      if (autoRole && autoRole.role) {
+        // Un rôle automatique a été trouvé, on met à jour le rôle de l'utilisateur.
+        // NOTE: Ceci met à jour le rôle global de l'utilisateur. Un système de rôle par salon serait une amélioration future.
+        User.updateRole(user.id, autoRole.role, autoRole.role, (err) => {
+          if (err) {
+            console.error("DriseBot: Erreur lors de la mise à jour du rôle", err);
+            this.announceUserJoin(user, roomName); // Annoncer avec l'ancien rôle en cas d'échec
+            return;
+          }
+
+          // On récupère l'utilisateur avec son nouveau rôle pour l'annonce
+          User.findById(user.id, (err, updatedUser) => {
+            if (err || !updatedUser) {
+              this.announceUserJoin(user, roomName); // Fallback si la récupération échoue
+              return;
+            }
+            this.announceUserJoin(updatedUser, roomName);
+          });
+        });
+      } else {
+        // Pas de rôle automatique trouvé, on annonce simplement l'arrivée
+        this.announceUserJoin(user, roomName);
       }
     });
   }
 
-  // Annoncer l'arrivée d'un utilisateur avec son rôle
-  announceUserJoin(user, room) {
-    if (!user || !room) return;
+  /**
+   * Annonce l'arrivée d'un utilisateur dans un salon avec le préfixe de son rôle.
+   * @param {object} user - L'objet utilisateur.
+   * @param {string} roomName - Le nom du salon pour le socket.
+   */
+  announceUserJoin(user, roomName) {
+    if (!user || !roomName) return;
 
     const rolePrefixes = {
       'owner': '~',
@@ -34,45 +68,25 @@ class DriseBot {
     const prefix = rolePrefixes[user.role] || '';
     const announcement = `${prefix}${user.pseudo} a rejoint le salon`;
 
-    this.io.to(room).emit('bot_message', {
+    this.io.to(roomName).emit('bot_message', {
       bot: this.name,
       message: announcement,
       type: 'info'
     });
   }
 
-  // Annoncer le départ d'un utilisateur
-  announceUserLeave(user, room) {
-    if (!user || !room) return;
+  /**
+   * Annonce le départ d'un utilisateur d'un salon.
+   * @param {object} user - L'objet utilisateur.
+   * @param {string} roomName - Le nom du salon pour le socket.
+   */
+  announceUserLeave(user, roomName) {
+    if (!user || !roomName) return;
 
-    this.io.to(room).emit('bot_message', {
+    this.io.to(roomName).emit('bot_message', {
       bot: this.name,
       message: `${user.pseudo} a quitté le salon`,
       type: 'info'
-    });
-  }
-
-  // Donner un rôle à un utilisateur
-  grantRole(granterId, targetId, role, roomId) {
-    User.findById(granterId, (err, granter) => {
-      if (err || !granter) return;
-
-      // Seul le propriétaire peut attribuer des rôles
-      if (granter.role !== 'owner') return;
-
-      User.updateRole(targetId, role, role, (err) => {
-        if (err) return;
-
-        User.findById(targetId, (err, targetUser) => {
-          if (err || !targetUser) return;
-
-          this.io.to(roomId).emit('bot_message', {
-            bot: this.name,
-            message: `${targetUser.pseudo} est maintenant ${role}`,
-            type: 'success'
-          });
-        });
-      });
     });
   }
 }

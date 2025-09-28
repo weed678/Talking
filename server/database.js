@@ -24,6 +24,7 @@ db.serialize(() => {
     gender TEXT NOT NULL,
     bio TEXT,
     avatar TEXT,
+    avatar_approved INTEGER DEFAULT 0,
     verified INTEGER DEFAULT 0,
     verification_badge TEXT,
     role TEXT DEFAULT 'user',
@@ -95,6 +96,35 @@ db.serialize(() => {
     FOREIGN KEY (granted_by) REFERENCES users (id)
   )`, (err) => {
     if (err) console.error("Erreur création table room_moderators :", err.message);
+  });
+
+  // Table pour les rôles automatiques (pour DriseBot)
+  db.run(`CREATE TABLE IF NOT EXISTS auto_roles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    room_id INTEGER NOT NULL,
+    role TEXT NOT NULL,
+    UNIQUE(user_id, room_id),
+    FOREIGN KEY (user_id) REFERENCES users (id),
+    FOREIGN KEY (room_id) REFERENCES rooms (id)
+  )`, (err) => {
+    if (err) console.error("Erreur création table auto_roles :", err.message);
+  });
+
+  // Table pour les bannissements
+  db.run(`CREATE TABLE IF NOT EXISTS bans (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    room_id INTEGER, -- NULL pour un ban global
+    banned_by INTEGER NOT NULL,
+    reason TEXT,
+    expires_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users (id),
+    FOREIGN KEY (room_id) REFERENCES rooms (id),
+    FOREIGN KEY (banned_by) REFERENCES users (id)
+  )`, (err) => {
+    if (err) console.error("Erreur création table bans :", err.message);
   });
 
   // Insertion des salles par défaut si aucune n'existe
